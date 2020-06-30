@@ -29,6 +29,32 @@
       "NoEcho": "true"
     }
   },
+     "Resources" : {
+    "InstanceUser" : {
+       "Type": "AWS::IAM::User",
+       "Properties": {
+          "Policies": [{ 
+            "PolicyName": "InstanceUserPolicy",
+            "PolicyDocument": {
+              "Statement": [
+                {
+                  "Sid": "InstanceUserPolicyCloudformation",
+                  "Action": "cloudformation:DescribeStackResource",
+                  "Effect": "Allow",
+                  "Resource": "*"
+                }
+              ]
+            }
+          }]
+       }
+    },
+    "InstanceAccessKey" : {
+       "Type": "AWS::IAM::AccessKey",
+       "Properties": {
+          "Status": "Active",
+          "UserName": { "Ref" : "InstanceUser" } 
+       }
+    },
 
 "Instance" : {
       "Type" : "AWS::EC2::Instance",
@@ -50,4 +76,5 @@
       "Description" : "Instance IP"
     }
   }
+     }
   }
