@@ -1,0 +1,185 @@
+{
+  "AWSTemplateFormatVersion" : "2010-09-09",
+
+  "Description" : "PHPMyAdmin resources",
+
+  "Parameters" : {
+    "InstanceType" : {
+      "Type" : "String",
+      "Default" : "t2.micro"
+    },
+
+    "InstanceAMI" : {
+      "Type" : "String"
+    },
+
+    "KeyName" : {
+      "Type" : "String",
+      "Description" : "SSH Key name"
+    },
+
+    "DBHost" : {
+      "Type" : "String",
+      "Description" : "DB host"
+    },
+
+    "Htpasswd" : {
+      "Type" : "String",
+      "Description" : "The apache htaccess prompt password",
+      "NoEcho": "true"
+    }
+  },
+
+  "Resources" : {
+    "InstanceUser" : {
+       "Type": "AWS::IAM::User",
+       "Properties": {
+          "Policies": [{ 
+            "PolicyName": "InstanceUserPolicy",
+            "PolicyDocument": {
+              "Statement": [
+                {
+                  "Sid": "InstanceUserPolicyCloudformation",
+                  "Action": "cloudformation:DescribeStackResource",
+                  "Effect": "Allow",
+                  "Resource": "*"
+                }
+              ]
+            }
+          }]
+       }
+    },
+    "InstanceAccessKey" : {
+       "Type": "AWS::IAM::AccessKey",
+       "Properties": {
+          "Status": "Active",
+          "UserName": { "Ref" : "InstanceUser" } 
+       }
+    },
+
+    "Instance" : {
+      "Type" : "AWS::EC2::Instance",
+      "Metadata" : {
+        "AWS::CloudFormation::Init" : {
+          "config" : {
+            "packages": {
+              "apt": {
+                "phpmyadmin": [ ]
+              }
+            },
+            "files" : {
+              "/etc/phpmyadmin/config-db-extra.php" : {
+                "content" : { "Fn::Join" : ["", [
+                  "<?php\n",
+                  "/* Authentication type */\n",
+                  "$cfg['Servers'][$i]['auth_type'] = 'cookie';\n",
+                  "/* Server parameters */\n",
+                  "$cfg['Servers'][$i]['host'] = '", { "Ref" : "DBHost" }, "';\n",
+                  "$cfg['Servers'][$i]['connect_type'] = 'tcp';\n",
+                  "$cfg['Servers'][$i]['compress'] = false;\n",
+                  "$cfg['Servers'][$i]['hide_db'] = '(mysql|information_schema|performance_schema|innodb)';\n",
+                  "$i++;\n",
+                  "?>\n"
+                ] ] },
+                "mode" : "00644",
+                "owner" : "root",
+                "group" : "www-data"
+              },
+              "/usr/share/phpmyadmin/.htaccess" : {
+                "content" : { "Fn::Join" : ["\n", [ 
+                  "AuthType Basic",
+                  "AuthName \"Restricted Files\"",
+                  "AuthUserFile /usr/share/phpmyadmin/.htpasswd",
+                  "Require valid-user"
+                ] ] },
+                "mode" : "00755",
+                "owner" : "www-data",
+                "group" : "www-data"
+              }
+            }
+          }
+        }
+      },
+      "Properties" : {
+        "AvailabilityZone" : "us-east-1d",
+        "ImageId" : { "Ref" : "InstanceAMI" },
+        "InstanceType" : { "Ref" : "InstanceType" },
+        "KeyName" : { "Ref" : "KeyName" },
+        "Monitoring" : true,
+        "SecurityGroups" : [
+          { "Ref" : "InstanceSecurityGroup" }
+        ],
+        "Tags" : [
+          { "Key" : "Name", "Value" : "PhpMyAdmin (RDS)" }  
+        ],
+        "UserData" : { "Fn::Base64" : { "Fn::Join" : ["", [
+          "#!/bin/bash\n",
+
+          "function error_exit\n",
+          "{\n",
+          "  cfn-signal -e 1 -r \"$1\" '", { "Ref" : "WaitHandle" }, "'\n",
+          "  exit 1\n",
+          "}\n",
+
+          "cfn-init -s ", { "Ref" : "AWS::StackId" }, 
+          "         -r Instance ",
+          "         --access-key ", { "Ref" : "InstanceAccessKey" },
+          "         --secret-key ", { "Fn::GetAtt": [ "InstanceAccessKey", "SecretAccessKey" ] },
+          "         --region ", { "Ref" : "AWS::Region" }, 
+          " || error_exit 'Failed to run cfn-init'\n",
+
+          "echo '' >> /etc/apache2/apache2.conf\n",
+          "echo 'Include /etc/phpmyadmin/apache.conf' >> /etc/apache2/apache2.conf\n",
+
+          "echo 'require(\"/etc/phpmyadmin/config-db-extra.php\");' >> /etc/phpmyadmin/config.inc.php\n",
+          
+          "sed -i 's/DirectoryIndex\\ index\\.php/DirectoryIndex\\ index\\.php\\n\tAllowOverride\\ All/' /etc/phpmyadmin/apache.conf\n",
+          "htpasswd -c -b /usr/share/phpmyadmin/.htpasswd phpmyadmin ", { "Ref" : "Htpasswd" }, "\n",
+          
+          "service apache2 restart\n",
+
+          "cfn-signal -e $? '", { "Ref" : "WaitHandle" }, "'\n"
+        ]]}} 
+      }
+    },
+
+    "InstanceSecurityGroup" : {
+      "Type" : "AWS::EC2::SecurityGroup",
+      "Properties" : {
+        "GroupDescription" : "HTTP and HTTPS and SSH",
+        "SecurityGroupIngress" : [ 
+          { "IpProtocol" : "tcp", "FromPort" : "80",  "ToPort" : "80",  "CidrIp" : "0.0.0.0/0" },
+          { "IpProtocol" : "tcp", "FromPort" : "22",  "ToPort" : "22",  "CidrIp" : "0.0.0.0/0" }
+        ]
+      }
+    },
+
+    "RDSSecurityGroupIngress" : {
+      "Type" : "AWS::RDS::DBSecurityGroupIngress",
+      "Properties" : {
+        "DBSecurityGroupName" : "main",
+        "EC2SecurityGroupName" : { "Ref" : "InstanceSecurityGroup" }
+      }
+    },
+
+    "WaitHandle" : {
+      "Type" : "AWS::CloudFormation::WaitConditionHandle"
+    },
+
+    "WaitCondition" : {
+      "Type" : "AWS::CloudFormation::WaitCondition",
+      "DependsOn" : "Instance",
+      "Properties" : {
+        "Handle"  : { "Ref" : "WaitHandle" },
+        "Timeout" : "1200"
+      }
+    }
+  },
+
+  "Outputs" : {
+    "InstanceIP" : {
+      "Value" : { "Fn::GetAtt" : [ "Instance" , "PublicIp" ] },
+      "Description" : "Instance IP"
+    }
+  }
+}
