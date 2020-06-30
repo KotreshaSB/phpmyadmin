@@ -5,7 +5,7 @@
  
       "Type": "AWS::EC2::Instance",
          "Properties":{
-         "ImageId" : "ami-07c1207a9d40bc3bd",
+         "ImageId" : "ami-0ac80df6eff0e70b5",
          "KeyName" : "jen",
          "InstanceType":"t2.micro",
          "SecurityGroups" : [ "launch-wizard-1" ],
