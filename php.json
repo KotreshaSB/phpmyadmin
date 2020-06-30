@@ -35,7 +35,7 @@
        "Type": "AWS::IAM::User",
        "Properties": {
           "Policies": [{ 
-            "PolicyName": "InstanceUserPolicy",
+            "PolicyName": "jen",
             "PolicyDocument": {
               "Statement": [
                 {
@@ -157,7 +157,7 @@
     "RDSSecurityGroupIngress" : {
       "Type" : "AWS::RDS::DBSecurityGroupIngress",
       "Properties" : {
-        "DBSecurityGroupName" : "main",
+        "DBSecurityGroupName" : "jen",
         "EC2SecurityGroupName" : { "Ref" : "InstanceSecurityGroup" }
       }
     },
