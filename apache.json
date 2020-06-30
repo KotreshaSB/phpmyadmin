@@ -1,0 +1,52 @@
+  {
+  "AWSTemplateFormatVersion" : "2010-09-09",
+
+  "Description" : "PHPMyAdmin resources",
+
+  "Parameters" : {
+    "InstanceType" : {
+      "Type" : "String",
+      "Default" : "t2.micro"
+    },
+
+    "InstanceAMI" : {
+      "Type" : "String"
+    },
+
+    "KeyName" : {
+      "Type" : "String",
+      "Description" : "SSH Key name"
+    },
+
+    "DBHost" : {
+      "Type" : "String",
+      "Description" : "DB host"
+    },
+
+    "Htpasswd" : {
+      "Type" : "String",
+      "Description" : "The apache htaccess prompt password",
+      "NoEcho": "true"
+    }
+  },
+
+"Instance" : {
+      "Type" : "AWS::EC2::Instance",
+      "Metadata" : {
+        "AWS::CloudFormation::Init" : {
+          "config" : {
+            "packages": {
+              "apt": {
+                "apache2": [ ]
+              }
+}
+}
+}
+}
+            },
+ "Outputs" : {
+    "InstanceIP" : {
+      "Value" : { "Fn::GetAtt" : [ "Instance" , "PublicIp" ] },
+      "Description" : "Instance IP"
+    }
+  }
