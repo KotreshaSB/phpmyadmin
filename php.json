@@ -146,10 +146,15 @@
 			}
 		},
 
-		 "Outputs":{
-    "WebsiteURL" : {
-      "Value" : { "Fn::Join" : ["", ["http://", { "Fn::GetAtt" : [        "WebServer", "PublicDnsName" ]}]] },
-        "Description" : "URL for newly created LAMP stack"
-   }
+		"Outputs": {
+			"WebsiteURL": {
+				"Value": {
+					"Fn::Join": ["", ["http://", {
+						"Fn::GetAtt": ["WebServer", "PublicDnsName"]
+					}]]
+				},
+				"Description": "URL for newly created LAMP stack"
+			}
+		}
 	}
 }
