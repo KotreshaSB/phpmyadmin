@@ -31,32 +31,7 @@
   },
 
   "Resources" : {
-    "InstanceUser" : {
-       "Type": "AWS::IAM::User",
-       "Properties": {
-          "Policies": [{ 
-            "PolicyName": "jen",
-            "PolicyDocument": {
-              "Statement": [
-                {
-                  "Sid": "InstanceUserPolicyCloudformation",
-                  "Action": "cloudformation:DescribeStackResource",
-                  "Effect": "Allow",
-                  "Resource": "*"
-                }
-              ]
-            }
-          }]
-       }
-    },
-    "InstanceAccessKey" : {
-       "Type": "AWS::IAM::AccessKey",
-       "Properties": {
-          "Status": "Active",
-          "UserName": { "Ref" : "InstanceUser" } 
-       }
-    },
-
+    
     "Instance" : {
       "Type" : "AWS::EC2::Instance",
       "Metadata" : {
@@ -106,7 +81,6 @@
         "InstanceType" : { "Ref" : "InstanceType" },
         "KeyName" : { "Ref" : "KeyName" },
         "Monitoring" : true,
-        "UserName" : { "Ref" : "InstanceUser" },
         "SecurityGroups" : [
           { "Ref" : "InstanceSecurityGroup" }
         ],
@@ -155,13 +129,6 @@
       }
     },
 
-    "RDSSecurityGroupIngress" : {
-      "Type" : "AWS::RDS::DBSecurityGroupIngress",
-      "Properties" : {
-        "DBSecurityGroupName" : "jen",
-        "EC2SecurityGroupName" : { "Ref" : "InstanceSecurityGroup" }
-      }
-    },
 
     "WaitHandle" : {
       "Type" : "AWS::CloudFormation::WaitConditionHandle"
