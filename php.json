@@ -106,7 +106,7 @@
         "InstanceType" : { "Ref" : "InstanceType" },
         "KeyName" : { "Ref" : "KeyName" },
         "Monitoring" : true,
-        "InstanceUser" :{ "Ref" : "InstanceUser" },
+        "UserName" : { "Ref" : "InstanceUser" },
         "SecurityGroups" : [
           { "Ref" : "InstanceSecurityGroup" }
         ],
