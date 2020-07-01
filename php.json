@@ -146,13 +146,10 @@
 			}
 		},
 
-		"Outputs": {
-			"InstanceIP": {
-				"Value": {
-					"Fn::GetAtt": ["Instance", "PublicIp"]
-				},
-				"Description": "Instance IP"
-			}
-		}
+		 "Outputs":{
+    "WebsiteURL" : {
+      "Value" : { "Fn::Join" : ["", ["http://", { "Fn::GetAtt" : [        "WebServer", "PublicDnsName" ]}]] },
+        "Description" : "URL for newly created LAMP stack"
+   }
 	}
 }
