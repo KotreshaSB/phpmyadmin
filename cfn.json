@@ -19,7 +19,7 @@
                 }
             },
             "Properties": {
-                "ImageId": "ami-a4c7edb2",
+                "ImageId": "ami-0ac80df6eff0e70b5",
                 "InstanceType": "t2.micro",
                 "UserData": {
                     "Fn::Base64": {
