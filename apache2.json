@@ -13,9 +13,7 @@
            "#!/bin/bash\n",
            "# Launching Instance",
            "apt-get -y install apache2 \n",
-           "apt-get -y install mysql \n",
-           "apt-get -y install mysql-server \n",
-           "apt-get -y install php php5-mysql \n"
+           
             ] ] } }
         }
     }
